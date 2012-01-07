@@ -37,7 +37,8 @@ namespace ClientServer
       }
       private static void startClient() {
          _Client = new Client("127.0.0.1", 9657);
-         _Client.Connect();
+         _Client.Connect();      
+
       }
 
    }

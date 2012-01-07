@@ -25,6 +25,7 @@ namespace ClientServer
          _ConnectionSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
          Shutdown = true;
       }
+
       public Server(string ipAddress, int port)
          : this(IPAddress.Parse(ipAddress), port) {
       }
@@ -41,6 +42,7 @@ namespace ClientServer
          Console.WriteLine("[SERVER] - Listening for connections");
          IAsyncResult result = _ConnectionSocket.BeginAccept(new AsyncCallback(OnAcceptCallback), null);
       }
+
       protected virtual void OnAcceptCallback(IAsyncResult result) {
          Socket soc = null;
          try
@@ -50,18 +52,20 @@ namespace ClientServer
          }
          catch (SocketException ex)
          {
-            Console.WriteLine(ex.Message);
+            Console.WriteLine(string.Format("[SERVER] - {0}", ex.Message));
          }
          _RecieveData(soc);
          _AcceptConnections();
 
       }
+
       protected virtual void _RecieveData(Socket connectedSocket) {
          Console.WriteLine(string.Format("[SERVER] - Ready to recieve on {0}", connectedSocket.LocalEndPoint));
          byte[] buffer = new byte[8192];
          SocketContainer container = new SocketContainer(connectedSocket, buffer);
          IAsyncResult result = connectedSocket.BeginReceive(container.Buffer, 0, container.Buffer.Length, SocketFlags.None, new AsyncCallback(OnRecievDataCallback), container);
       }
+
       protected virtual void OnRecievDataCallback(IAsyncResult result) {
          SocketContainer container = (SocketContainer)result.AsyncState;
          int bytesRecieved = 0;
@@ -71,7 +75,7 @@ namespace ClientServer
          }
          catch (SocketException ex)
          {
-            Console.WriteLine(ex.Message);
+            Console.WriteLine(string.Format("[SERVER] - {0}", ex.Message));
          }
 
          Console.WriteLine(string.Format("[SERVER] - Received {0} bytes", bytesRecieved));
@@ -92,16 +96,4 @@ namespace ClientServer
 
 
    }
-   internal class SocketContainer
-   {
-      internal byte[] Buffer { get; private set; }
-      internal Socket ConnectionSocket { get; private set; }
-
-      internal SocketContainer(Socket socket, byte[] buffer) {
-         Buffer = buffer;
-         ConnectionSocket = socket;
-      }
-   }
-
-
 }
