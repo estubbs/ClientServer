@@ -29,7 +29,7 @@ namespace ClientServer
          : this(IPAddress.Parse(ipAddress), port) {
       }
 
-      public void Start() {
+      public virtual void Start() {
          Console.WriteLine("[SERVER] - Server Starting");
          Shutdown = false;
          _ConnectionSocket.Bind(_ServerEndPoint);
@@ -37,23 +37,70 @@ namespace ClientServer
          _AcceptConnections();
       }
 
-      protected void _AcceptConnections() {
+      protected virtual void _AcceptConnections() {
          Console.WriteLine("[SERVER] - Listening for connections");
          IAsyncResult result = _ConnectionSocket.BeginAccept(new AsyncCallback(OnAcceptCallback), null);
       }
-      protected void OnAcceptCallback(IAsyncResult result) {
+      protected virtual void OnAcceptCallback(IAsyncResult result) {
+         Socket soc = null;
          try
          {
-            Socket soc = _ConnectionSocket.EndAccept(result);
+            soc = _ConnectionSocket.EndAccept(result);
             Console.WriteLine(string.Format("[SERVER] - Connection from {0}", soc.RemoteEndPoint));
          }
          catch (SocketException ex)
          {
             Console.WriteLine(ex.Message);
          }
+         _RecieveData(soc);
          _AcceptConnections();
+
+      }
+      protected virtual void _RecieveData(Socket connectedSocket) {
+         Console.WriteLine(string.Format("[SERVER] - Ready to recieve on {0}", connectedSocket.LocalEndPoint));
+         byte[] buffer = new byte[8192];
+         SocketContainer container = new SocketContainer(connectedSocket, buffer);
+         IAsyncResult result = connectedSocket.BeginReceive(container.Buffer, 0, container.Buffer.Length, SocketFlags.None, new AsyncCallback(OnRecievDataCallback), container);
+      }
+      protected virtual void OnRecievDataCallback(IAsyncResult result) {
+         SocketContainer container = (SocketContainer)result.AsyncState;
+         int bytesRecieved = 0;
+         try
+         {
+            bytesRecieved = container.ConnectionSocket.EndReceive(result);
+         }
+         catch (SocketException ex)
+         {
+            Console.WriteLine(ex.Message);
+         }
+
+         Console.WriteLine(string.Format("[SERVER] - Received {0} bytes", bytesRecieved));
+         Console.WriteLine();
+
+         Console.WriteLine("[SERVER] - Buffer contents:");
+         for (int i = 0; i < bytesRecieved; i++)
+            Console.Write(container.Buffer[i]);
+         Console.WriteLine();
+
+         Console.WriteLine("[SERVER] - Buffer contents:");
+         for (int i = 0; i < bytesRecieved; i++)
+            Console.Write((char)container.Buffer[i]);
+         Console.WriteLine();
+
+         _RecieveData(container.ConnectionSocket);
       }
 
+
+   }
+   internal class SocketContainer
+   {
+      internal byte[] Buffer { get; private set; }
+      internal Socket ConnectionSocket { get; private set; }
+
+      internal SocketContainer(Socket socket, byte[] buffer) {
+         Buffer = buffer;
+         ConnectionSocket = socket;
+      }
    }
 
 

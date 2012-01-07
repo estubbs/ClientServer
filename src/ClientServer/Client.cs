@@ -28,16 +28,40 @@ namespace ClientServer
          : this(IPAddress.Parse(address), port) {
       }
 
-      public void Connect() {
+      public virtual void Connect() {
          _Shutdown = false;
          _StartConnecting();
       }
+      public virtual void SendData() {
+         _StartSending(_Socket);
 
-      protected void _StartConnecting() {
+      }
+      protected static void _StartSending(Socket socket) {
+         byte[] buffer = Encoding.ASCII.GetBytes("Hello, world!");
+         SocketContainer container = new SocketContainer(socket, buffer);
+         Console.WriteLine("[CLIENT] - Begin sending data");
+         socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, new AsyncCallback(_OnSendingCallback), container);
+      }
+      protected static void _OnSendingCallback(IAsyncResult result) {
+         SocketContainer container = (SocketContainer)result.AsyncState;
+         int bytesSent = 0;
+         try
+         {
+            bytesSent = container.ConnectionSocket.EndSend(result);
+            Console.WriteLine(string.Format("[CLIENT] - Sent {0} bytes", bytesSent));
+         }
+         catch (SocketException ex)
+         {
+            Console.WriteLine(ex.Message);
+         }
+      }
+
+
+      protected virtual void _StartConnecting() {
          Console.WriteLine(string.Format("[CLIENT] - Attempting to connect to {0}", _ClientEndPoint));
          _Socket.BeginConnect(_ClientEndPoint, _OnConnectedCallback, null);
       }
-      protected void _OnConnectedCallback(IAsyncResult result) {
+      protected virtual void _OnConnectedCallback(IAsyncResult result) {
          try
          {
             _Socket.EndConnect(result);

@@ -11,8 +11,12 @@ namespace ClientServer
       static Client _Client { get; set; }
       static Server _Server { get; set; }
 
-
       static void Main(string[] args) {
+
+         if (args[0] == "c")
+            startClient();
+         if (args[0] == "s")
+            startServer();
 
          char c;
          while (true)
@@ -22,8 +26,7 @@ namespace ClientServer
             {
                default: continue;
                case 'q': return;
-               case 's': startServer(); break;
-               case 'c': startClient(); break;
+               case 'd': _Client.SendData(); break;
             }
          }
 
@@ -36,5 +39,6 @@ namespace ClientServer
          _Client = new Client("127.0.0.1", 9657);
          _Client.Connect();
       }
+
    }
 }
