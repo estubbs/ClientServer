@@ -8,8 +8,9 @@ namespace ClientServer
 {
    class Program
    {
+      static Client _Client { get; set; }
       static Server _Server { get; set; }
-      
+
 
       static void Main(string[] args) {
 
@@ -32,8 +33,8 @@ namespace ClientServer
          _Server.Start();
       }
       private static void startClient() {
-         
-
+         _Client = new Client("127.0.0.1", 9657);
+         _Client.Connect();
       }
    }
 }
