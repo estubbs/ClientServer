@@ -59,8 +59,9 @@ namespace ClientServer
                bytesWriten = Encoding.UTF8.GetBytes(s, 0, s.Length, buffer, currentPosition);
                currentPosition += bytesWriten;
             }
+            _Server.SendData(ref buffer, currentPosition);
+            currentPosition = 0;
          }
-         _Server.SendData(ref buffer, currentPosition);
       }
    }
 }

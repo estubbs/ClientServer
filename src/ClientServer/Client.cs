@@ -60,7 +60,7 @@ namespace ClientServer
       }
 
       private static void _StartRecieving(Socket socket) {
-         Console.WriteLine("[CLIENT] - Ready to recieve");
+         //  Console.WriteLine("[CLIENT] - Ready to recieve");
          byte[] buffer = new byte[8192];
          var container = new SocketContainer(socket, buffer);
          IAsyncResult result = socket.BeginReceive(buffer, 0, 8192, SocketFlags.None, new AsyncCallback(_OnRecievingCallback), container);
@@ -71,21 +71,21 @@ namespace ClientServer
          try
          {
             bytesRecieved = container.ConnectionSocket.EndReceive(result);
-            Console.WriteLine(string.Format("[CLIENT] - Recieved {0} bytes", bytesRecieved));
+            //    Console.WriteLine(string.Format("[CLIENT] - Recieved {0} bytes", bytesRecieved));
          }
          catch (SocketException ex)
          {
             Console.WriteLine(string.Format("[CLIENT] - {0}", ex.Message));
          }
-         Console.WriteLine("Bytes were:");
-         Console.WriteLine(Encoding.UTF8.GetChars(container.Buffer, 0, bytesRecieved));
+         //    Console.WriteLine("Bytes were:");
+         Console.WriteLine(string.Format("[SERVER] - {0}", Encoding.UTF8.GetString(container.Buffer, 0, bytesRecieved)));
          _StartRecieving(container.ConnectionSocket);
 
       }
       protected static void _StartSending(Socket socket) {
          byte[] buffer = Encoding.ASCII.GetBytes("Hello, world!");
          SocketContainer container = new SocketContainer(socket, buffer);
-         Console.WriteLine("[CLIENT] - Begin sending data");
+         // Console.WriteLine("[CLIENT] - Begin sending data");
          socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, new AsyncCallback(_OnSendingCallback), container);
       }
 
@@ -95,7 +95,7 @@ namespace ClientServer
          try
          {
             bytesSent = container.ConnectionSocket.EndSend(result);
-            Console.WriteLine(string.Format("[CLIENT] - Sent {0} bytes", bytesSent));
+            //    Console.WriteLine(string.Format("[CLIENT] - Sent {0} bytes", bytesSent));
          }
          catch (SocketException ex)
          {
