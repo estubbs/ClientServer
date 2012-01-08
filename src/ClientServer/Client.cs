@@ -49,6 +49,7 @@ namespace ClientServer
          {
             info.Socket.EndConnect(result);
             Console.WriteLine(string.Format("[CLIENT] - Connection established to {0}", info.RemoteEndPoint));
+            _StartRecieving(info.Socket);
          }
          catch (SocketException ex)
          {
@@ -58,6 +59,29 @@ namespace ClientServer
             _StartConnecting(info);
       }
 
+      private static void _StartRecieving(Socket socket) {
+         Console.WriteLine("[CLIENT] - Ready to recieve");
+         byte[] buffer = new byte[8192];
+         var container = new SocketContainer(socket, buffer);
+         IAsyncResult result = socket.BeginReceive(buffer, 0, 8192, SocketFlags.None, new AsyncCallback(_OnRecievingCallback), container);
+      }
+      public static void _OnRecievingCallback(IAsyncResult result) {
+         SocketContainer container = (SocketContainer)result.AsyncState;
+         int bytesRecieved = 0;
+         try
+         {
+            bytesRecieved = container.ConnectionSocket.EndReceive(result);
+            Console.WriteLine(string.Format("[CLIENT] - Recieved {0} bytes", bytesRecieved));
+         }
+         catch (SocketException ex)
+         {
+            Console.WriteLine(string.Format("[CLIENT] - {0}", ex.Message));
+         }
+         Console.WriteLine("Bytes were:");
+         Console.WriteLine(Encoding.UTF8.GetChars(container.Buffer, 0, bytesRecieved));
+         _StartRecieving(container.ConnectionSocket);
+
+      }
       protected static void _StartSending(Socket socket) {
          byte[] buffer = Encoding.ASCII.GetBytes("Hello, world!");
          SocketContainer container = new SocketContainer(socket, buffer);

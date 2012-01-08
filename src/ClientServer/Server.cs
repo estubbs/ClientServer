@@ -12,11 +12,15 @@ namespace ClientServer
 
       protected Socket _ConnectionSocket { get; set; }
       protected IPEndPoint _ServerEndPoint { get; set; }
+      protected HashSet<Socket> _ConnectedClientSockets { get; set; }
 
       public IPAddress IPAddress { get; protected set; }
       public int Port { get; protected set; }
       public bool Connected { get; protected set; }
       public bool Shutdown { get; protected set; }
+
+
+
 
       public Server(IPAddress ipAddress, int port) {
          IPAddress = ipAddress;
@@ -24,6 +28,7 @@ namespace ClientServer
          _ServerEndPoint = new IPEndPoint(IPAddress, Port);
          _ConnectionSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
          Shutdown = true;
+         _ConnectedClientSockets = new HashSet<Socket>();
       }
 
       public Server(string ipAddress, int port)
@@ -37,7 +42,35 @@ namespace ClientServer
          _ConnectionSocket.Listen(1);
          _AcceptConnections();
       }
+      public virtual void SendData(ref byte[] dataBuffer, int currentPosition) {
+         foreach (Socket s in _ConnectedClientSockets)
+         {
+            _SendingData(new SocketContainer(s, ref dataBuffer), currentPosition);
+         }
+      }
 
+      private static void _SendingData(SocketContainer container, int currentPosition) {
+
+         IAsyncResult result =
+            container
+            .ConnectionSocket
+            .BeginSend(container.Buffer, 0, currentPosition + 1, SocketFlags.None, new AsyncCallback(_OnSendingCallback), container);
+
+      }
+
+      private static void _OnSendingCallback(IAsyncResult result) {
+         SocketContainer container = (SocketContainer)result.AsyncState;
+         int bytesSent = 0;
+         try
+         {
+            bytesSent = container.ConnectionSocket.EndSend(result);
+            Console.WriteLine(string.Format("[SERVER] - Sent {0} bytes", bytesSent));
+         }
+         catch (SocketException ex)
+         {
+            Console.WriteLine(string.Format("[SERVER] - {0}", ex.Message));
+         }
+      }
       protected virtual void _AcceptConnections() {
          Console.WriteLine("[SERVER] - Listening for connections");
          IAsyncResult result = _ConnectionSocket.BeginAccept(new AsyncCallback(OnAcceptCallback), null);
@@ -48,6 +81,7 @@ namespace ClientServer
          try
          {
             soc = _ConnectionSocket.EndAccept(result);
+            _ConnectedClientSockets.Add(soc);
             Console.WriteLine(string.Format("[SERVER] - Connection from {0}", soc.RemoteEndPoint));
          }
          catch (SocketException ex)

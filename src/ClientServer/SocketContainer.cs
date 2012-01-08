@@ -16,5 +16,9 @@ namespace ClientServer
          Buffer = buffer;
          ConnectionSocket = socket;
       }
+      internal SocketContainer(Socket socket, ref byte[] buffer) {
+         Buffer = buffer;
+         ConnectionSocket = socket;
+      }
    }
 }
